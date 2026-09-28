@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CumplAI · Screening de buques — Demo MVP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF;--soft:#F3F3F3;--line:#E2E2E2;--mid:#BDBDBD;--ink:#000000;--ink2:#4A4A4A;--ink3:#7A7A7A;
+  --acc:#2C24A9;--acc-soft:#ECEBFA;--nav:#000000;--nav-ink:#FFFFFF;
+  --ok:#1E6B45;--ok-bg:#E6F3EC;--warn:#8A5A00;--warn-bg:#FBF1DC;--bad:#A3221F;--bad-bg:#FBE7E6;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121212;--soft:#1C1C1F;--line:#2C2C31;--mid:#55555C;--ink:#F4F4F4;--ink2:#C8C8CC;--ink3:#8E8E94;
+  --acc:#8B84F0;--acc-soft:#23213F;--nav:#000000;--nav-ink:#FFFFFF;
+  --ok:#7FD1A4;--ok-bg:#15291F;--warn:#F1C46B;--warn-bg:#2E2412;--bad:#F29A96;--bad-bg:#331716;}}
+:root[data-theme="dark"]{
+  --bg:#121212;--soft:#1C1C1F;--line:#2C2C31;--mid:#55555C;--ink:#F4F4F4;--ink2:#C8C8CC;--ink3:#8E8E94;
+  --acc:#8B84F0;--acc-soft:#23213F;--ok:#7FD1A4;--ok-bg:#15291F;--warn:#F1C46B;--warn-bg:#2E2412;--bad:#F29A96;--bad-bg:#331716;}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:Inter,"Helvetica Neue",Helvetica,sans-serif;font-size:14px;line-height:1.5}
+a{color:var(--acc)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100%}
+nav.side{background:var(--nav);color:var(--nav-ink);padding:24px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.brand{padding:0 8px 22px}
+.brand b{font-size:22px;letter-spacing:-.02em}
+.brand span{color:#8B84F0;font-weight:500}
+.brand small{display:block;color:#9A9A9A;font-size:12px;margin-top:2px}
+.navbtn{background:none;border:0;color:#CFCFCF;text-align:left;padding:9px 10px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.navbtn:hover{background:#1A1A1A;color:#fff}
+.navbtn.on{background:#fff;color:#000;font-weight:600}
+.navbtn .count{background:#2C24A9;color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;font-weight:600}
+.side .foot{margin-top:auto;font-size:11px;color:#8A8A8A;padding:0 8px}
+main{padding:28px 36px 60px;max-width:1180px;width:100%}
+.demo-banner{background:var(--acc-soft);color:var(--acc);border-radius:6px;padding:8px 12px;font-size:12.5px;margin-bottom:22px}
+h1{font-size:26px;letter-spacing:-.02em;margin:0 0 4px;font-weight:700}
+h2{font-size:17px;margin:28px 0 12px;font-weight:600}
+h3{font-size:14px;margin:0 0 8px;font-weight:600}
+.sub{color:var(--ink3);margin:0 0 20px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--mid)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.kpi{background:var(--bg);padding:16px}
+.kpi b{display:block;font-size:28px;letter-spacing:-.02em}
+.kpi span{color:var(--ink3);font-size:12.5px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;color:var(--ink3);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--soft)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+.mono{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.chip{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap}
+.c-ok{background:var(--ok-bg);color:var(--ok)}
+.c-warn{background:var(--warn-bg);color:var(--warn)}
+.c-bad{background:var(--bad-bg);color:var(--bad)}
+.c-n{background:var(--soft);color:var(--ink2)}
+.c-acc{background:var(--acc-soft);color:var(--acc)}
+.muted{color:var(--ink3)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.panel{border:1px solid var(--line);border-radius:8px;padding:18px}
+fieldset{border:1px solid var(--line);border-radius:8px;padding:16px 18px 18px;margin:0 0 16px}
+legend{font-weight:600;padding:0 6px}
+.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 16px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:12px;color:var(--ink2);font-weight:500}
+.f input,.f select{border:1px solid var(--mid);border-radius:6px;padding:8px 10px;background:var(--bg)}
+.f .hint{font-size:11.5px;color:var(--ink3);min-height:16px}
+.f .hint.ok{color:var(--ok)}.f .hint.bad{color:var(--bad)}
+.span2{grid-column:span 2}.span3{grid-column:span 3}
+/* Hull card — the memorable element */
+.hull{background:var(--ink);color:var(--bg);border-radius:10px;padding:22px 24px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+.hull .imo{font-size:44px;font-weight:700;letter-spacing:.06em;line-height:1}
+.hull .imo .cd{border-bottom:3px solid #8B84F0;padding-bottom:2px}
+.hull .imo small{font-size:15px;letter-spacing:.2em;font-weight:500;margin-right:8px;opacity:.7}
+.hull .nm{font-size:18px;font-weight:600;margin-top:10px}
+.hull .meta{font-size:12.5px;opacity:.75;margin-top:4px}
+.hull .cdnote{font-size:11px;opacity:.6;margin-top:10px}
+.decision{text-align:right}
+.decision .dlabel{font-size:12px;opacity:.7}
+.decision .dval{font-size:22px;font-weight:700;margin-top:2px}
+.decision .dscore{font-size:12.5px;opacity:.8}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:22px 0 18px;overflow-x:auto}
+.tab{background:none;border:0;padding:10px 14px;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;white-space:nowrap}
+.tab.on{color:var(--ink);border-bottom-color:var(--acc);font-weight:600}
+.rules td:last-child,.rules th:last-child{text-align:right}
+.bar{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin:10px 0 4px}
+.bar i{display:block;height:100%;background:var(--acc)}
+/* pipeline */
+.pipe{list-style:none;margin:0;padding:0;border-left:2px solid var(--line);margin-left:9px}
+.pipe li{position:relative;padding:0 0 18px 24px}
+.pipe li::before{content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--mid)}
+.pipe li.run::before{border-color:var(--acc);background:var(--acc-soft)}
+.pipe li.done::before{border-color:var(--acc);background:var(--acc)}
+.pipe li .t{font-weight:600}
+.pipe li .srcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pipe li .res{font-size:12.5px;color:var(--ink2);margin-top:4px}
+@media (prefers-reduced-motion: no-preference){.pipe li.run::before{animation:pulse 1s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.35}}
+.timeline{list-style:none;padding:0;margin:0}
+.timeline li{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.links a{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:6px;margin-bottom:8px;text-decoration:none}
+.links a:hover{border-color:var(--acc)}
+.links a span{display:block;color:var(--ink3);font-size:12px}
+textarea{width:100%;border:1px solid var(--mid);border-radius:6px;padding:8px 10px;min-height:80px;background:var(--bg)}
+.toast{position:sticky;bottom:16px;margin-top:16px;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:6px;display:none;width:max-content;max-width:100%}
+.back{background:none;border:0;color:var(--acc);cursor:pointer;padding:0;margin-bottom:12px}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  nav.side{position:sticky;top:0;height:auto;flex-direction:row;overflow-x:auto;padding:12px;z-index:5;padding-top:calc(12px + env(safe-area-inset-top,0px))}
+  .brand{padding:0 12px 0 0}.brand small,.side .foot{display:none}
+  .navbtn{white-space:nowrap;gap:6px}
+  main{padding:20px 16px 50px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .grid2,.fields{grid-template-columns:1fr}.span2,.span3{grid-column:auto}
+  .hull{grid-template-columns:1fr}.decision{text-align:left}.hull .imo{font-size:34px}
+}
+@media print{nav.side,.tabs,.btn,.demo-banner,.back{display:none!important}.app{display:block}}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><b>Segsa</b> <span>| CumplAI</span><small>Módulo marítimo · MVP</small></div>
+    <button class="navbtn" data-view="inicio">Inicio</button>
+    <button class="navbtn" data-view="cartera">Cartera de buques</button>
+    <button class="navbtn" data-view="nuevo">Registrar buque</button>
+    <button class="navbtn" data-view="alertas">Alertas <span class="count" id="alertCount">0</span></button>
+    <button class="navbtn" data-view="fuentes">Fuentes y listas</button>
+    <div class="foot">Soluciones Empresariales Globales, S.A.<br>Demo con datos ficticios</div>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<script>
+/* ---------- Utilidades OMI ---------- */
+function shipCheck(six){let s=0;for(let i=0;i<6;i++)s+=+six[i]*(7-i);return s%10}
+function makeShip(six){return six+shipCheck(six)}
+function validShip(n){n=String(n).replace(/\D/g,'');return n.length===7&&shipCheck(n.slice(0,6))===+n[6]}
+const CW=[8,6,4,2,9,7];
+function compCheck(six){let s=0;for(let i=0;i<6;i++)s+=+six[i]*CW[i];return (11-s%11)%10}
+function makeComp(six){return six+compCheck(six)}
+function validComp(n){n=String(n).replace(/\D/g,'');return n.length===7&&compCheck(n.slice(0,6))===+n[6]}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+
+/* ---------- Catálogo de fuentes ---------- */
+const SOURCES=[
+ {id:'un',name:'ONU — Lista Consolidada',group:'Sanciones',url:'https://scsanctions.un.org/resources/xml/en/consolidated.xml',fmt:'XML',freq:'60 min',access:'Gratis',step:4},
+ {id:'un1718',name:'ONU — Buques 1718 (RPDC)',group:'Sanciones',url:'https://main.un.org/securitycouncil/en/sanctions/1718/materials/1718-Designated-Vessels-List',fmt:'HTML',freq:'24 h',access:'Gratis',step:4},
+ {id:'ofac',name:'OFAC — SDN',group:'Sanciones',url:'https://sanctionslistservice.ofac.treas.gov/api/download/sdn_advanced.xml',fmt:'XML',freq:'30 min',access:'Gratis',step:4},
+ {id:'uksl',name:'Reino Unido — UK Sanctions List',group:'Sanciones',url:'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml',fmt:'XML',freq:'60 min',access:'Gratis',step:4},
+ {id:'eu',name:'Unión Europea — Financial Sanctions Files',group:'Sanciones',url:'https://webgate.ec.europa.eu/fsd/fsf',fmt:'XML',freq:'60 min',access:'Gratis (token)',step:4},
+ {id:'eushadow',name:'UE — Buques con veto portuario (Reg. 833/2014)',group:'Sanciones',url:'https://eur-lex.europa.eu/',fmt:'PDF/HTML',freq:'24 h',access:'Gratis',step:4},
+ {id:'owner',name:'Proveedor de titularidad (licenciado)',group:'Titularidad',url:'',fmt:'API',freq:'Bajo demanda',access:'Licencia',step:3},
+ {id:'paris',name:'Paris MoU — Banning list',group:'Riesgo operativo',url:'https://parismou.org/banning/',fmt:'Web',freq:'Semanal',access:'Gratis',step:5},
+ {id:'tokyo',name:'Tokyo MoU — Underperforming ships',group:'Riesgo operativo',url:'https://www.tokyo-mou.org/',fmt:'Web',freq:'Mensual',access:'Gratis',step:5},
+ {id:'ciala',name:'CIALA — Viña del Mar',group:'Riesgo operativo',url:'https://alvm.prefecturanaval.gob.ar/',fmt:'Web',freq:'Semanal',access:'Gratis',step:5},
+ {id:'iuu',name:'Combined IUU Vessel List',group:'Riesgo operativo',url:'https://iuu-vessels.org/',fmt:'Descarga',freq:'Semanal',access:'Gratis',step:5},
+ {id:'amp',name:'AMP Panamá — Cancelaciones (Decreto 512)',group:'Capa Panamá',url:'https://www.amp.gob.pa/',fmt:'Notas de prensa',freq:'Diaria + analista',access:'Gratis',step:5},
+];
+const srcState={};SOURCES.forEach((s,i)=>srcState[s.id]={last:(8+i*7)+' min',hash:Math.random().toString(16).slice(2,10),status:'Al día'});
+
+/* ---------- Datos de demostración (ficticios) ---------- */
+function V(o){o.events=o.events||[];o.decisionLog=o.decisionLog||[];return o}
+const DB=[
+ V({imo:makeShip('100234'),name:'ESTRELLA DEL ISTMO',flag:'Panamá',mmsi:'352001234',callsign:'3EXX1',type:'Granelero',gt:32400,year:2014,cls:'Sociedad IACS',pni:'Club del International Group',pniIG:true,port:'Panamá',
+  client:'Banco Demo del Pacífico',op:'Financiamiento / hipoteca naval',
+  parties:[{role:'Propietario registrado',name:'Istmo Bulk Carriers S.A.',cimo:makeComp('001203'),country:'Panamá'},{role:'Compañía DOC / ISM',name:'Canal Ship Management Inc.',cimo:makeComp('001455'),country:'Panamá'},{role:'Operador comercial',name:'Istmo Bulk Carriers S.A.',cimo:makeComp('001203'),country:'Panamá'},{role:'Beneficiario final',name:'Persona natural (KYC en expediente)',cimo:'',country:'Panamá'}],
+  history:[{date:'2014-05-02',name:'ESTRELLA DEL ISTMO',flag:'Panamá'}],
+  psc:[{date:'2026-03-11',port:'Cartagena',regime:'Viña del Mar',def:2,det:false},{date:'2025-09-02',port:'Rotterdam',regime:'Paris MoU',def:0,det:false}],
+  hits:[],iuu:false,banned:false,amp:null,gisis:true,aisGaps:null,
+  events:[{date:'2026-09-01',text:'Alta del buque y screening inicial: sin hallazgos'},{date:'2026-09-28',text:'Re-screening automático tras actualización OFAC: sin cambios'}]}),
+ V({imo:makeShip('100871'),name:'NORDIC AURORA',flag:'Panamá',mmsi:'352007788',callsign:'3EYY7',type:'Petrolero',gt:61200,year:2002,cls:'Otra / no IACS',pni:'Aseguradora fuera del International Group',pniIG:false,port:'Panamá',
+  client:'Bufete Demo & Asociados',op:'Registro de nave',
+  parties:[{role:'Propietario registrado',name:'Aurelis Maritime Corp.',cimo:makeComp('002314'),country:'Islas Marshall'},{role:'Compañía DOC / ISM',name:'Blue Talon Shipmanagement FZE',cimo:makeComp('002877'),country:'EAU'},{role:'Operador comercial',name:'Varda Ocean Trading Ltd',cimo:makeComp('003019'),country:'Hong Kong'},{role:'Beneficiario final',name:'No identificado',cimo:'',country:'—'}],
+  history:[{date:'2025-11-04',name:'SEA LYNX',flag:'Gabón'},{date:'2026-02-18',name:'AURORA N',flag:'Camerún'},{date:'2026-07-30',name:'NORDIC AURORA',flag:'Panamá'}],
+  psc:[{date:'2026-01-20',port:'Singapur',regime:'Tokyo MoU',def:9,det:true}],
+  hits:[{src:'uksl',type:'Nombre difuso',target:'Blue Talon Shipmanagement FZE',matched:'BLUE TALON SHIP MANAGEMENT FZ-LLC',score:88,program:'Rusia'}],
+  iuu:false,banned:false,amp:null,gisis:true,aisGaps:'Fase 3',
+  events:[{date:'2026-09-20',text:'Alta del buque: 3 banderas en 12 meses'},{date:'2026-09-20',text:'Coincidencia difusa en UKSL con la compañía DOC'}]}),
+ V({imo:makeShip('101456'),name:'OCEAN PEARL V',flag:'Panamá',mmsi:'352009912',callsign:'3EZZ3',type:'Petrolero de productos',gt:28900,year:2004,cls:'Otra / no IACS',pni:'Sin información',pniIG:false,port:'Panamá',
+  client:'Naviera Demo Istmeña',op:'Agenciamiento / consignación',
+  parties:[{role:'Propietario registrado',name:'Pearl Line Holdings Ltd',cimo:makeComp('004102'),country:'Seychelles'},{role:'Compañía DOC / ISM',name:'Gulf Horizon Marine LLC',cimo:makeComp('004560'),country:'EAU'},{role:'Operador comercial',name:'Pearl Line Holdings Ltd',cimo:makeComp('004102'),country:'Seychelles'},{role:'Beneficiario final',name:'No identificado',cimo:'',country:'—'}],
+  history:[{date:'2024-06-10',name:'PEARL V',flag:'Comoras'},{date:'2025-12-01',name:'OCEAN PEARL V',flag:'Panamá'}],
+  psc:[],
+  hits:[{src:'ofac',type:'OMI exacto',target:'Buque',matched:'OCEAN PEARL V (IMO coincide)',score:100,program:'Irán'}],
+  iuu:false,banned:false,amp:{status:'Cancelación en proceso',date:'2026-09-15'},gisis:true,aisGaps:'Fase 3',
+  events:[{date:'2026-09-14',text:'Nueva designación OFAC con OMI exacto del buque'},{date:'2026-09-15',text:'AMP inicia cancelación de registro (Decreto 512)'},{date:'2026-09-15',text:'Operación bloqueada; caso escalado a oficial de cumplimiento'}]}),
+ V({imo:makeShip('102218'),name:'MAR CARIBE 7',flag:'Panamá',mmsi:'352004410',callsign:'3EAA2',type:'Pesquero',gt:640,year:1996,cls:'Otra / no IACS',pni:'Sin información',pniIG:false,port:'Vacamonte',
+  client:'Proveedor Demo de Bunkering',op:'Bunkering / suministro',
+  parties:[{role:'Propietario registrado',name:'Pesquera Demo del Sur S.A.',cimo:makeComp('005031'),country:'Panamá'},{role:'Compañía DOC / ISM',name:'Pesquera Demo del Sur S.A.',cimo:makeComp('005031'),country:'Panamá'},{role:'Beneficiario final',name:'Persona natural (pendiente)',cimo:'',country:'—'}],
+  history:[{date:'2019-03-03',name:'MAR CARIBE 7',flag:'Panamá'}],
+  psc:[],hits:[],iuu:true,banned:false,amp:null,gisis:true,aisGaps:null,
+  events:[{date:'2026-09-10',text:'Coincidencia en Combined IUU Vessel List'}]}),
+ V({imo:makeShip('102963'),name:'PACIFIC VENTURE',flag:'Panamá',mmsi:'352006655',callsign:'3EBB9',type:'Portacontenedores',gt:18700,year:2008,cls:'Sociedad IACS',pni:'Club del International Group',pniIG:true,port:'Panamá',
+  client:'Banco Demo del Pacífico',op:'Pago / transferencia',
+  parties:[{role:'Propietario registrado',name:'Venture Box Shipping S.A.',cimo:makeComp('006210'),country:'Panamá'},{role:'Compañía DOC / ISM',name:'Harbor Crest Ship Management',cimo:makeComp('006338'),country:'Grecia'},{role:'Fletador',name:'Kordan Freight Services',cimo:makeComp('006471'),country:'Turquía'},{role:'Beneficiario final',name:'Persona natural (KYC en expediente)',cimo:'',country:'Grecia'}],
+  history:[{date:'2008-10-12',name:'PACIFIC VENTURE',flag:'Panamá'}],
+  psc:[{date:'2026-05-03',port:'Algeciras',regime:'Paris MoU',def:11,det:true},{date:'2025-10-19',port:'Callao',regime:'Viña del Mar',def:6,det:true}],
+  hits:[],iuu:false,banned:false,amp:null,gisis:true,aisGaps:null,
+  events:[{date:'2026-08-28',text:'Alta del buque: 2 detenciones portuarias en 12 meses'}]}),
+];
+
+/* ---------- Motor de riesgo ---------- */
+function assess(v){
+  const r=[];const changesFlag=Math.max(0,v.history.filter(h=>daysAgo(h.date)<=365).length-1)+(v.declFlag||0);
+  const changesName=v.declName||0;
+  const hard=[];
+  v.hits.forEach(h=>{if(h.type==='OMI exacto')hard.push('Coincidencia de OMI exacto en '+srcName(h.src))});
+  if(v.iuu)hard.push('Buque en lista de pesca ilegal (IUU)');
+  if(v.amp)hard.push('AMP: '+v.amp.status);
+  if(v.banned)hard.push('Veto portuario vigente');
+  const fuzzy=v.hits.filter(h=>h.type!=='OMI exacto');
+  r.push({rule:'Coincidencia difusa de empresa en listas (≥85%)',pts:fuzzy.length?40:0});
+  r.push({rule:'Cambios de bandera en últimos 12 meses (≥2)',pts:changesFlag>=2?20:0,detail:changesFlag+' cambio(s)'});
+  r.push({rule:'Cambios de nombre en últimos 12 meses',pts:(changesName>0||v.history.filter(h=>daysAgo(h.date)<=365).length>1)?10:0});
+  const age=new Date().getFullYear()-(+v.year||new Date().getFullYear());
+  r.push({rule:'Antigüedad mayor a 20 años',pts:age>20?10:0,detail:age+' años'});
+  r.push({rule:'Club P&I fuera del International Group o sin información',pts:v.pniIG?0:15});
+  r.push({rule:'Sociedad clasificadora no IACS',pts:v.cls==='Sociedad IACS'?0:5});
+  const dets=v.psc.filter(p=>p.det&&daysAgo(p.date)<=365).length;
+  r.push({rule:'Detenciones portuarias en últimos 12 meses',pts:Math.min(dets*10,20),detail:dets+' detención(es)'});
+  r.push({rule:'Beneficiario final no identificado',pts:v.parties.some(p=>p.role==='Beneficiario final'&&/no identificado/i.test(p.name))?15:0});
+  r.push({rule:'OMI no encontrado en GISIS',pts:v.gisis?0:30});
+  const score=Math.min(100,r.reduce((a,b)=>a+b.pts,0));
+  let decision,cls;
+  if(hard.length){decision='Bloquear';cls='c-bad'}
+  else if(score>=30){decision=score>=60?'Revisar — riesgo alto':'Revisar';cls='c-warn'}
+  else{decision='Aprobar';cls='c-ok'}
+  return {rules:r,score,decision,cls,hard};
+}
+function daysAgo(d){return (Date.now()-new Date(d).getTime())/864e5}
+const srcName=id=>(SOURCES.find(s=>s.id===id)||{name:id}).name;
+
+/* ---------- Estado de UI ---------- */
+let view='inicio',current=null,tab='resumen';
+const main=document.getElementById('main');
+function go(v,param){view=v;if(param)current=param;tab='resumen';render();window.scrollTo(0,0)}
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>go(b.dataset.view));
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3200)}
+function alerts(){const out=[];DB.forEach(v=>{const a=assess(v);if(a.decision!=='Aprobar')out.push({v,a})});return out}
+
+function render(){
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',b.dataset.view===view||(view==='ficha'&&b.dataset.view==='cartera')));
+  document.getElementById('alertCount').textContent=alerts().length;
+  const banner='<div class="demo-banner">Demo MVP con datos ficticios. Los números OMI y las empresas son inventados; las fuentes y sus URL son las oficiales que usaría la versión productiva.</div>';
+  const views={inicio:vInicio,cartera:vCartera,nuevo:vNuevo,alertas:vAlertas,fuentes:vFuentes,ficha:vFicha};
+  main.innerHTML=banner+views[view]()+'<div class="toast" id="toast" role="status"></div>';
+  bind();
+}
+
+/* ---------- Vistas ---------- */
+function vInicio(){
+  const al=alerts();const blk=DB.filter(v=>assess(v).decision==='Bloquear').length;
+  const rev=DB.filter(v=>assess(v).decision.startsWith('Revisar')).length;
+  const ev=DB.flatMap(v=>v.events.map(e=>({...e,v}))).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
+  return `<h1>Monitoreo marítimo</h1><p class="sub">Cartera de buques vinculados a clientes, con screening contra sanciones y riesgo operativo.</p>
+  <div class="kpis">
+   <div class="kpi"><b>${DB.length}</b><span>Buques en cartera</span></div>
+   <div class="kpi"><b>${blk}</b><span>Bloqueados</span></div>
+   <div class="kpi"><b>${rev}</b><span>En revisión</span></div>
+   <div class="kpi"><b>${al.length}</b><span>Alertas abiertas</span></div>
+   <div class="kpi"><b>${SOURCES.length}</b><span>Fuentes conectadas</span></div>
+  </div>
+  <div class="row" style="margin:16px 0 4px"><button class="btn acc" data-go="nuevo">Registrar buque</button><button class="btn ghost" id="simUpd">Simular actualización de listas</button></div>
+  <h2>Actividad reciente</h2>
+  <div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Buque</th><th>Evento</th></tr></thead><tbody>
+  ${ev.map(e=>`<tr class="click" data-open="${e.v.imo}"><td class="mono">${e.date}</td><td><b>${esc(e.v.name)}</b><br><span class="muted mono">IMO ${e.v.imo}</span></td><td>${esc(e.text)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+function vCartera(){
+  return `<h1>Cartera de buques</h1><p class="sub">Selecciona un buque para ver su ficha, cadena de control, resultados por fuente y expediente.</p>
+  <div class="tablewrap"><table><thead><tr><th>Buque</th><th>Tipo · bandera</th><th>Cliente y operación</th><th>Puntaje</th><th>Decisión</th></tr></thead><tbody>
+  ${DB.map(v=>{const a=assess(v);return `<tr class="click" data-open="${v.imo}"><td><b>${esc(v.name)}</b><br><span class="muted mono">IMO ${v.imo}</span></td><td>${esc(v.type)}<br><span class="muted">${esc(v.flag)}</span></td><td>${esc(v.client)}<br><span class="muted">${esc(v.op)}</span></td><td class="mono">${a.hard.length?'—':a.score}</td><td><span class="chip ${a.cls}">${a.decision}</span></td></tr>`}).join('')}
+  </tbody></table></div>`;
+}
+function vAlertas(){
+  const al=alerts();
+  return `<h1>Alertas</h1><p class="sub">Buques que requieren acción del oficial de cumplimiento.</p>
+  ${al.length?`<div class="tablewrap"><table><thead><tr><th>Buque</th><th>Motivo principal</th><th>Decisión sugerida</th><th></th></tr></thead><tbody>
+  ${al.map(({v,a})=>`<tr><td><b>${esc(v.name)}</b><br><span class="muted mono">IMO ${v.imo}</span></td><td>${esc(a.hard[0]||a.rules.filter(r=>r.pts).sort((x,y)=>y.pts-x.pts).map(r=>r.rule)[0]||'')}</td><td><span class="chip ${a.cls}">${a.decision}</span></td><td><button class="btn ghost" data-open="${v.imo}">Abrir caso</button></td></tr>`).join('')}
+  </tbody></table></div>`:'<div class="panel">No hay alertas abiertas. La cartera se vuelve a revisar cada vez que cambia una lista.</div>'}`;
+}
+function vFuentes(){
+  const groups=[...new Set(SOURCES.map(s=>s.group))];
+  return `<h1>Fuentes y listas</h1><p class="sub">Cada fuente se consulta en su frecuencia; si la firma del archivo cambia, se procesan las diferencias y se vuelve a revisar toda la cartera.</p>
+  <div class="row" style="margin-bottom:16px"><button class="btn acc" id="simUpd">Simular actualización de listas</button></div>
+  ${groups.map(g=>`<h2>${g}</h2><div class="tablewrap"><table><thead><tr><th>Fuente</th><th>Conector</th><th>Formato</th><th>Frecuencia</th><th>Última sync</th><th>Firma</th><th>Estado</th></tr></thead><tbody>
+  ${SOURCES.filter(s=>s.group===g).map(s=>`<tr><td><b>${esc(s.name)}</b><br><span class="muted">${esc(s.access)}</span></td><td style="max-width:260px;word-break:break-all">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${esc(s.url.replace('https://',''))}</a>`:'<span class="muted">Por definir (Sea-web, Lloyd\'s List, Windward…)</span>'}</td><td>${s.fmt}</td><td>${s.freq}</td><td class="mono">hace ${srcState[s.id].last}</td><td class="mono muted">${srcState[s.id].hash}</td><td><span class="chip ${srcState[s.id].status==='Al día'?'c-ok':'c-acc'}">${srcState[s.id].status}</span></td></tr>`).join('')}
+  </tbody></table></div>`).join('')}`;
+}
+
+/* ---------- Registro ---------- */
+const FLAGS=['Panamá','Liberia','Islas Marshall','Malta','Bahamas','Singapur','Grecia','Chipre','Gabón','Camerún','Comoras','Otra'];
+const TYPES=['Granelero','Petrolero','Petrolero de productos','Gasero (GNL/GLP)','Portacontenedores','Carga general','Pesquero','Remolcador / apoyo','Pasaje','Otro'];
+const OPS=['Financiamiento / hipoteca naval','Registro de nave','Agenciamiento / consignación','Bunkering / suministro','Seguro / reaseguro','Pago / transferencia','Carta de crédito / comercio exterior'];
+function sel(id,opts,v){return `<select id="${id}">${opts.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`}
+function vNuevo(){
+  return `<h1>Registrar buque</h1><p class="sub">Captura los datos del buque y su cadena de control. El screening consulta cada fuente en orden y propone una decisión.</p>
+  <div class="row" style="margin-bottom:16px"><span class="muted">Cargar ejemplo:</span>
+   <button class="btn ghost" data-fill="clean">Buque limpio</button><button class="btn ghost" data-fill="risk">Buque con señales de riesgo</button></div>
+  <fieldset><legend>1 · Identificación del buque</legend><div class="fields">
+   <div class="f"><label for="imo">Número OMI *</label><input id="imo" inputmode="numeric" maxlength="11" placeholder="IMO 1234567"><div class="hint" id="imoHint">7 dígitos; el último es de control</div></div>
+   <div class="f"><label for="name">Nombre actual *</label><input id="name"></div>
+   <div class="f"><label for="flag">Bandera</label>${sel('flag',FLAGS,'Panamá')}</div>
+   <div class="f"><label for="mmsi">MMSI</label><input id="mmsi" inputmode="numeric" maxlength="9"><div class="hint" id="mmsiHint">Panamá usa prefijos 351–357, 370–373</div></div>
+   <div class="f"><label for="callsign">Distintivo de llamada</label><input id="callsign"></div>
+   <div class="f"><label for="type">Tipo de buque</label>${sel('type',TYPES,'Granelero')}</div>
+   <div class="f"><label for="gt">Arqueo bruto (GT)</label><input id="gt" inputmode="numeric"></div>
+   <div class="f"><label for="year">Año de construcción</label><input id="year" inputmode="numeric" maxlength="4"></div>
+   <div class="f"><label for="port">Puerto de registro</label><input id="port" value="Panamá"></div>
+   <div class="f"><label for="cls">Sociedad clasificadora</label>${sel('cls',['Sociedad IACS','Otra / no IACS','Sin información'],'Sociedad IACS')}</div>
+   <div class="f span2"><label for="pni">Club P&amp;I</label>${sel('pni',['Club del International Group','Aseguradora fuera del International Group','Sin información'],'Club del International Group')}</div>
+  </div></fieldset>
+  <fieldset><legend>2 · Cadena de control</legend><div class="fields">
+   ${party('own','Propietario registrado')}${party('doc','Compañía DOC / ISM')}${party('opr','Operador comercial')}${party('chr','Fletador')}
+   <div class="f"><label for="bo">Beneficiario final</label><input id="bo" placeholder="Nombre o 'No identificado'"></div>
+   <div class="f"><label for="boc">País del beneficiario</label><input id="boc"></div>
+  </div></fieldset>
+  <fieldset><legend>3 · Relación comercial</legend><div class="fields">
+   <div class="f"><label for="client">Cliente vinculado</label><input id="client" placeholder="Cliente en CumplAI"></div>
+   <div class="f"><label for="op">Tipo de operación</label>${sel('op',OPS,OPS[0])}</div>
+   <div class="f"><label for="route">Jurisdicciones de ruta declaradas</label><input id="route" placeholder="Ej. Panamá, Colombia, EE. UU."></div>
+  </div></fieldset>
+  <fieldset><legend>4 · Historial declarado (últimos 12 meses)</legend><div class="fields">
+   <div class="f"><label for="declFlag">Cambios de bandera</label><input id="declFlag" type="number" min="0" value="0"></div>
+   <div class="f"><label for="declName">Cambios de nombre</label><input id="declName" type="number" min="0" value="0"></div>
+   <div class="f"><label for="prevFlag">Bandera anterior</label>${sel('prevFlag',['—',...FLAGS],'—')}</div>
+  </div></fieldset>
+  <div class="row"><button class="btn acc" id="run">Ejecutar screening</button><span class="muted" id="runHint"></span></div>
+  <div id="pipeWrap" style="margin-top:24px"></div>`;
+}
+function party(k,label){return `<div class="f"><label for="${k}">${label}</label><input id="${k}"></div><div class="f"><label for="${k}i">OMI de compañía</label><input id="${k}i" inputmode="numeric" maxlength="7"><div class="hint" id="${k}iHint"></div></div><div class="f"><label for="${k}c">País</label><input id="${k}c"></div>`}
+
+const STEPS=[
+ {n:1,t:'Alta de buque o contraparte',srcs:[]},
+ {n:2,t:'Validar número OMI',srcs:['Algoritmo SOLAS XI-1/3']},
+ {n:3,t:'Resolver cadena de control',srcs:['Proveedor de titularidad','GISIS (verificación manual)']},
+ {n:4,t:'Screening de sanciones',srcs:['ONU','ONU 1718','OFAC','UKSL','UE','UE veto portuario']},
+ {n:5,t:'Riesgo operativo y capa Panamá',srcs:['Paris MoU','Tokyo MoU','CIALA','IUU','AMP']},
+ {n:6,t:'Score y decisión',srcs:[]},
+ {n:7,t:'Expediente y monitoreo',srcs:[]},
+];
+function runPipeline(v){
+  const wrap=document.getElementById('pipeWrap');const a=assess(v);
+  const res=[
+   'Registro creado para '+esc(v.name)+' · cliente: '+esc(v.client||'—'),
+   'OMI '+v.imo+' válido (dígito de control '+v.imo[6]+')',
+   v.parties.length+' partes registradas; '+v.parties.filter(p=>p.cimo).length+' con OMI de compañía válido',
+   v.hits.length?v.hits.map(h=>h.type+' en '+srcName(h.src)).join('; '):'Sin coincidencias en 6 listas',
+   [v.iuu?'Lista IUU':'',v.amp?'AMP: '+v.amp.status:'',v.psc.filter(p=>p.det).length?v.psc.filter(p=>p.det).length+' detención(es) PSC':''].filter(Boolean).join('; ')||'Sin hallazgos operativos',
+   'Puntaje '+a.score+'/100 → '+a.decision,
+   'Expediente generado; monitoreo continuo activado'];
+  wrap.innerHTML=`<h2>Screening en curso</h2><ol class="pipe">${STEPS.map((s,i)=>`<li id="st${i}"><div class="t">${s.n}. ${s.t}</div>${s.srcs.length?`<div class="srcs">${s.srcs.map(x=>`<span class="chip c-n">${x}</span>`).join('')}</div>`:''}<div class="res" id="rs${i}"></div></li>`).join('')}</ol><div id="pipeEnd"></div>`;
+  let i=0;const tick=()=>{if(i>0){document.getElementById('st'+(i-1)).className='done';document.getElementById('rs'+(i-1)).textContent=res[i-1]}
+    if(i<STEPS.length){document.getElementById('st'+i).className='run';i++;setTimeout(tick,520)}
+    else{document.getElementById('pipeEnd').innerHTML=`<div class="panel" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><b>Decisión sugerida:</b> <span class="chip ${a.cls}">${a.decision}</span> <span class="muted">Puntaje ${a.score}/100</span></div><button class="btn acc" data-open="${v.imo}">Abrir ficha del buque</button></div>`;bindOpen()}};
+  tick();
+}
+function collect(){
+  const g=id=>document.getElementById(id).value.trim();
+  const imo=g('imo').replace(/\D/g,'');
+  const parties=[['own','Propietario registrado'],['doc','Compañía DOC / ISM'],['opr','Operador comercial'],['chr','Fletador']].filter(([k])=>g(k)).map(([k,role])=>({role,name:g(k),cimo:g(k+'i'),country:g(k+'c')}));
+  parties.push({role:'Beneficiario final',name:g('bo')||'No identificado',cimo:'',country:g('boc')||'—'});
+  const hist=[];if(g('prevFlag')!=='—')hist.push({date:new Date(Date.now()-150*864e5).toISOString().slice(0,10),name:'(nombre anterior)',flag:g('prevFlag')});
+  hist.push({date:today(),name:g('name').toUpperCase(),flag:g('flag')});
+  return V({imo,name:g('name').toUpperCase(),flag:g('flag'),mmsi:g('mmsi'),callsign:g('callsign'),type:g('type'),gt:+g('gt')||0,year:+g('year')||new Date().getFullYear(),cls:g('cls'),pni:g('pni'),pniIG:g('pni')==='Club del International Group',port:g('port'),
+   client:g('client'),op:g('op'),route:g('route'),parties,history:hist,psc:[],hits:[],iuu:false,banned:false,amp:null,gisis:true,aisGaps:null,
+   declFlag:+g('declFlag')||0,declName:+g('declName')||0,events:[{date:today(),text:'Alta del buque y screening inicial'}]});
+}
+function fill(kind){
+  const set=(id,v)=>{const e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'))};
+  if(kind==='clean'){set('imo','IMO '+makeShip('103317'));set('name','Brisa de Taboga');set('flag','Panamá');set('mmsi','352008123');set('callsign','3ECC5');set('type','Carga general');set('gt','9800');set('year','2017');set('cls','Sociedad IACS');set('pni','Club del International Group');
+   set('own','Taboga Cargo S.A.');set('owni',makeComp('007105'));set('ownc','Panamá');set('doc','Taboga Cargo S.A.');set('doci',makeComp('007105'));set('docc','Panamá');set('bo','Persona natural (KYC en expediente)');set('boc','Panamá');set('client','Banco Demo del Pacífico');set('declFlag','0');set('declName','0');set('prevFlag','—')}
+  else{set('imo','IMO '+makeShip('103842'));set('name','Silver Meridian');set('flag','Panamá');set('mmsi','352005501');set('callsign','3EDD4');set('type','Petrolero');set('gt','58300');set('year','2001');set('cls','Otra / no IACS');set('pni','Sin información');
+   set('own','Meridian Tankers Corp.');set('owni',makeComp('008210'));set('ownc','Islas Marshall');set('doc','Crescent Line Marine FZE');set('doci','0082991');set('docc','EAU');set('opr','Meridian Tankers Corp.');set('opri',makeComp('008210'));set('oprc','Islas Marshall');set('bo','No identificado');set('boc','');set('client','Bufete Demo & Asociados');set('op','Registro de nave');set('declFlag','2');set('declName','1');set('prevFlag','Camerún')}
+}
+
+/* ---------- Ficha ---------- */
+function vFicha(){
+  const v=DB.find(x=>x.imo===current);if(!v)return '<p>Buque no encontrado.</p>';
+  const a=assess(v);
+  const T=[['resumen','Resumen y puntaje'],['cadena','Cadena de control'],['sanciones','Sanciones'],['operativo','Riesgo operativo'],['verificar','Verificación manual'],['monitoreo','Monitoreo'],['expediente','Expediente']];
+  return `<button class="back" data-go="cartera">← Cartera de buques</button>
+  <div class="hull">
+   <div><div class="imo"><small>IMO</small>${v.imo.slice(0,6)}<span class="cd">${v.imo[6]}</span></div>
+    <div class="nm">${esc(v.name)}</div>
+    <div class="meta">${esc(v.type)} · Bandera ${esc(v.flag)} · MMSI ${esc(v.mmsi||'—')} · ${esc(v.callsign||'—')} · ${v.gt?v.gt.toLocaleString('es-PA')+' GT':'GT —'} · ${v.year||'—'}</div>
+    <div class="cdnote">El último dígito subrayado es el dígito de control: valida que el OMI no sea inventado.</div></div>
+   <div class="decision"><div class="dlabel">Decisión sugerida</div><div class="dval">${a.decision}</div><div class="dscore">${a.hard.length?'Regla de bloqueo':'Puntaje '+a.score+'/100'}</div></div>
+  </div>
+  <div class="tabs" role="tablist">${T.map(([k,l])=>`<button class="tab ${tab===k?'on':''}" data-tab="${k}" role="tab" aria-selected="${tab===k}">${l}</button>`).join('')}</div>
+  ${({resumen:tResumen,cadena:tCadena,sanciones:tSanciones,operativo:tOperativo,verificar:tVerificar,monitoreo:tMonitoreo,expediente:tExpediente})[tab](v,a)}`;
+}
+function tResumen(v,a){
+  return `<div class="grid2"><div class="panel"><h3>Por qué esta decisión</h3>
+   ${a.hard.length?`<p><span class="chip c-bad">Regla de bloqueo</span></p><ul>${a.hard.map(h=>`<li>${esc(h)}</li>`).join('')}</ul><p class="muted">Las reglas de bloqueo prevalecen sobre el puntaje.</p>`:''}
+   <div class="bar"><i style="width:${a.score}%"></i></div><div class="muted">Puntaje de riesgo ${a.score}/100 · Aprobar &lt;30 · Revisar 30–59 · Riesgo alto ≥60</div>
+   <table class="rules" style="margin-top:12px"><tbody>${a.rules.map(r=>`<tr><td>${esc(r.rule)}${r.detail?`<br><span class="muted">${esc(r.detail)}</span>`:''}</td><td class="mono" style="color:${r.pts?'var(--ink)':'var(--ink3)'}">${r.pts?'+'+r.pts:'0'}</td></tr>`).join('')}</tbody></table></div>
+   <div class="panel"><h3>Relación comercial</h3><table><tbody>
+    <tr><td class="muted">Cliente</td><td>${esc(v.client||'—')}</td></tr><tr><td class="muted">Operación</td><td>${esc(v.op)}</td></tr>
+    <tr><td class="muted">Puerto de registro</td><td>${esc(v.port||'—')}</td></tr><tr><td class="muted">Clasificadora</td><td>${esc(v.cls)}</td></tr>
+    <tr><td class="muted">Club P&amp;I</td><td>${esc(v.pni)}</td></tr><tr><td class="muted">En GISIS</td><td>${v.gisis?'Sí':'No'}</td></tr>
+    <tr><td class="muted">Rutas declaradas</td><td>${esc(v.route||'—')}</td></tr></tbody></table></div></div>`;
+}
+function tCadena(v){
+  return `<p class="sub">Cada empresa se revisa como una contraparte más: por OMI de compañía (exacto) y por nombre (difuso).</p>
+  <div class="tablewrap"><table><thead><tr><th>Rol</th><th>Empresa / persona</th><th>OMI compañía</th><th>País</th><th>Resultado</th></tr></thead><tbody>
+  ${v.parties.map(p=>{const hit=v.hits.find(h=>h.target===p.name);const valid=p.cimo?validComp(p.cimo):null;
+   return `<tr><td>${esc(p.role)}</td><td><b>${esc(p.name)}</b></td><td class="mono">${p.cimo?esc(p.cimo)+' '+(valid?'<span class="chip c-ok">válido</span>':'<span class="chip c-bad">inválido</span>'):'<span class="muted">—</span>'}</td><td>${esc(p.country||'—')}</td>
+   <td>${hit?`<span class="chip c-warn">${hit.score}% en ${srcName(hit.src)}</span><br><span class="muted">${esc(hit.matched)}</span>`:(/no identificado/i.test(p.name)?'<span class="chip c-warn">Sin identificar</span>':'<span class="chip c-ok">Sin coincidencias</span>')}</td></tr>`}).join('')}
+  </tbody></table></div>`;
+}
+function tSanciones(v){
+  const s4=SOURCES.filter(s=>s.step===4);
+  return `<p class="sub">Resultado por lista, con la versión (firma) usada. Esto queda en el expediente para auditoría.</p>
+  <div class="tablewrap"><table><thead><tr><th>Lista</th><th>Buscado por</th><th>Resultado</th><th>Versión</th></tr></thead><tbody>
+  ${s4.map(s=>{const hs=v.hits.filter(h=>h.src===s.id);return `<tr><td><b>${esc(s.name)}</b></td><td>OMI del buque, OMI y nombre de ${v.parties.length} partes</td>
+   <td>${hs.length?hs.map(h=>`<span class="chip ${h.type==='OMI exacto'?'c-bad':'c-warn'}">${h.type} · ${h.score}%</span><br><span class="muted">${esc(h.matched)} · Programa ${esc(h.program)}</span>`).join('<br>'):'<span class="chip c-ok">Sin coincidencias</span>'}</td><td class="mono muted">${srcState[s.id].hash}</td></tr>`}).join('')}
+  </tbody></table></div>`;
+}
+function tOperativo(v){
+  const src5=['paris','tokyo','ciala','iuu','amp'];
+  return `<div class="grid2"><div class="panel"><h3>Listas operativas y Panamá</h3><table><tbody>
+   <tr><td>Paris / Tokyo MoU — veto de acceso</td><td>${v.banned?'<span class="chip c-bad">Vetado</span>':'<span class="chip c-ok">No figura</span>'}</td></tr>
+   <tr><td>Combined IUU Vessel List</td><td>${v.iuu?'<span class="chip c-bad">En lista</span>':'<span class="chip c-ok">No figura</span>'}</td></tr>
+   <tr><td>AMP — cancelación (Decreto 512)</td><td>${v.amp?`<span class="chip c-bad">${esc(v.amp.status)}</span><br><span class="muted">${v.amp.date}</span>`:'<span class="chip c-ok">Sin registro</span>'}</td></tr>
+   <tr><td>Rastreo AIS (apagones, transbordos)</td><td><span class="chip c-n">Fase 3</span></td></tr></tbody></table></div>
+   <div class="panel"><h3>Historial de nombre y bandera</h3><ul class="timeline">${v.history.slice().reverse().map(h=>`<li><span class="mono muted">${h.date}</span><span><b>${esc(h.name)}</b> · ${esc(h.flag)}</span></li>`).join('')}</ul></div></div>
+  <h2>Inspecciones del Estado rector del puerto</h2>
+  ${v.psc.length?`<div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Puerto</th><th>Régimen</th><th>Deficiencias</th><th>Detención</th></tr></thead><tbody>${v.psc.map(p=>`<tr><td class="mono">${p.date}</td><td>${esc(p.port)}</td><td>${esc(p.regime)}</td><td class="mono">${p.def}</td><td>${p.det?'<span class="chip c-warn">Sí</span>':'<span class="chip c-ok">No</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="panel muted">Sin inspecciones registradas. Verifica en Equasis desde la pestaña de verificación manual.</div>'}`;
+}
+function tVerificar(v){
+  const L=[['Equasis — ficha del buque','Historial de nombres, banderas, gestores, inspecciones y P&I','https://www.equasis.org/'],
+   ['GISIS (OMI) — Ship and Company Particulars','Confirma que el OMI existe, propietario registrado y compañía ISM','https://gisis.imo.org/Public/SHIPS/Default.aspx'],
+   ['OFAC — Sanctions List Search','Filtra por tipo Vessel y busca el OMI '+v.imo,'https://sanctionssearch.ofac.treas.gov/'],
+   ['UK Sanctions List — búsqueda','Búsqueda oficial del Reino Unido','https://search-uk-sanctions-list.service.gov.uk/'],
+   ['Paris MoU — Banning list','Buques con veto de acceso a puertos europeos','https://parismou.org/banning/'],
+   ['CIALA — Viña del Mar','Detenciones en puertos latinoamericanos','https://alvm.prefecturanaval.gob.ar/'],
+   ['AMP — notas de prensa','Cancelaciones de registro de la bandera panameña','https://www.amp.gob.pa/']];
+  return `<p class="sub">Equasis y GISIS no tienen API. El analista los abre desde aquí y deja constancia en el expediente.</p><div class="links grid2">${L.map(([t,d,u])=>`<a href="${u}" target="_blank" rel="noopener"><b>${t}</b><span>${d}</span></a>`).join('')}</div>`;
+}
+function tMonitoreo(v){
+  return `<div class="grid2"><div class="panel"><h3>Monitoreo continuo</h3><p>Este buque y sus ${v.parties.length} partes se vuelven a revisar automáticamente cada vez que cambia una de las ${SOURCES.length} fuentes.</p><p class="muted">Próxima verificación programada: con la siguiente sincronización de OFAC (cada 30 min).</p><button class="btn ghost" id="rescreen">Re-screening ahora</button></div>
+  <div class="panel"><h3>Bitácora</h3><ul class="timeline">${v.events.slice().reverse().map(e=>`<li><span class="mono muted">${e.date}</span><span>${esc(e.text)}</span></li>`).join('')}</ul></div></div>`;
+}
+function tExpediente(v,a){
+  return `<div class="grid2"><div class="panel"><h3>Decisión del oficial de cumplimiento</h3>
+   <div class="f" style="margin-bottom:10px"><label for="dAnal">Analista</label><input id="dAnal" placeholder="Nombre del analista"></div>
+   <div class="f" style="margin-bottom:10px"><label for="dDec">Decisión final</label>${sel('dDec',['Aprobar','Aprobar con debida diligencia reforzada','Rechazar operación','Rechazar y preparar ROS'],a.decision==='Bloquear'?'Rechazar y preparar ROS':a.decision.startsWith('Revisar')?'Aprobar con debida diligencia reforzada':'Aprobar')}</div>
+   <div class="f" style="margin-bottom:10px"><label for="dJus">Justificación</label><textarea id="dJus" placeholder="Hallazgos revisados, fuentes consultadas y razón de la decisión"></textarea><div class="hint" id="dErr"></div></div>
+   <div class="row"><button class="btn acc" id="saveDec">Guardar decisión</button><button class="btn ghost" onclick="window.print()">Imprimir expediente</button></div></div>
+   <div class="panel"><h3>Contenido del expediente</h3><ul>
+    <li>Ficha del buque y validación OMI</li><li>Cadena de control y screening por parte</li><li>Resultado por lista con versión de cada fuente</li><li>Riesgo operativo, PSC e historial de bandera</li><li>Constancias de verificación manual</li><li>Decisión, analista, fecha y justificación</li><li>Soporte para ROS ante la UAF (si aplica)</li></ul>
+    ${v.decisionLog.length?`<h3 style="margin-top:14px">Decisiones registradas</h3><ul class="timeline">${v.decisionLog.map(d=>`<li><span class="mono muted">${d.date}</span><span><b>${esc(d.dec)}</b> — ${esc(d.anal)}<br><span class="muted">${esc(d.jus)}</span></span></li>`).join('')}</ul>`:''}</div></div>`;
+}
+
+/* ---------- Eventos ---------- */
+function bindOpen(){document.querySelectorAll('[data-open]').forEach(e=>e.onclick=()=>go('ficha',e.dataset.open))}
+function bind(){
+  bindOpen();
+  document.querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>go(e.dataset.go));
+  document.querySelectorAll('[data-tab]').forEach(e=>e.onclick=()=>{tab=e.dataset.tab;render()});
+  const sim=document.getElementById('simUpd');if(sim)sim.onclick=simulate;
+  const rs=document.getElementById('rescreen');if(rs)rs.onclick=()=>{const v=DB.find(x=>x.imo===current);v.events.push({date:today(),text:'Re-screening manual: '+assess(v).decision});render();toast('Re-screening completado')};
+  const sd=document.getElementById('saveDec');if(sd)sd.onclick=()=>{
+    const anal=document.getElementById('dAnal').value.trim(),jus=document.getElementById('dJus').value.trim(),err=document.getElementById('dErr');
+    if(!anal||!jus){err.textContent='Indica el analista y la justificación para guardar la decisión.';err.className='hint bad';return}
+    const v=DB.find(x=>x.imo===current),dec=document.getElementById('dDec').value;
+    v.decisionLog.push({date:today(),dec,anal,jus});v.events.push({date:today(),text:'Decisión registrada: '+dec+' ('+anal+')'});render();toast('Decisión guardada en el expediente')};
+  const imo=document.getElementById('imo');
+  if(imo){
+    imo.oninput=()=>{const n=imo.value.replace(/\D/g,''),h=document.getElementById('imoHint');
+      if(n.length<7){h.textContent='7 dígitos; el último es de control';h.className='hint'}
+      else if(n.length>7||!validShip(n)){h.textContent='OMI inválido: el dígito de control debería ser '+(n.length>=6?shipCheck(n.slice(0,6)):'?');h.className='hint bad'}
+      else if(DB.some(v=>v.imo===n)){h.innerHTML='Válido · ya está en la cartera';h.className='hint ok'}
+      else{h.textContent='OMI válido';h.className='hint ok'}};
+    const mm=document.getElementById('mmsi');mm.oninput=()=>{const h=document.getElementById('mmsiHint'),m=mm.value.replace(/\D/g,''),f=document.getElementById('flag').value;
+      if(m.length===9&&f==='Panamá'&&!/^(35[1-7]|37[0-3])/.test(m)){h.textContent='El MMSI no corresponde a Panamá: señal de alerta';h.className='hint bad'}else{h.textContent='Panamá usa prefijos 351–357, 370–373';h.className='hint'}};
+    ['own','doc','opr','chr'].forEach(k=>{const e=document.getElementById(k+'i');e.oninput=()=>{const h=document.getElementById(k+'iHint'),n=e.value.replace(/\D/g,'');
+      if(!n){h.textContent='';return}if(n.length<7){h.textContent='7 dígitos';h.className='hint'}else if(validComp(n)){h.textContent='Válido';h.className='hint ok'}else{h.textContent='Inválido (módulo 11)';h.className='hint bad'}}});
+    document.querySelectorAll('[data-fill]').forEach(b=>b.onclick=()=>fill(b.dataset.fill));
+    document.getElementById('run').onclick=()=>{
+      const v=collect(),hint=document.getElementById('runHint');
+      if(!validShip(v.imo)){hint.textContent='Ingresa un número OMI válido para continuar.';hint.style.color='var(--bad)';imo.focus();return}
+      if(!v.name){hint.textContent='Ingresa el nombre actual del buque.';hint.style.color='var(--bad)';return}
+      if(DB.some(x=>x.imo===v.imo)){hint.textContent='';go('ficha',v.imo);return}
+      hint.textContent='';
+      // señales derivadas de datos capturados
+      const bad=v.parties.filter(p=>p.cimo&&!validComp(p.cimo));
+      if(bad.length)v.events.push({date:today(),text:'OMI de compañía inválido: '+bad.map(p=>p.name).join(', ')});
+      if(/crescent line/i.test(JSON.stringify(v.parties)))v.hits.push({src:'eu',type:'Nombre difuso',target:v.parties.find(p=>/crescent/i.test(p.name)).name,matched:'CRESCENT LINE MARINE FZCO',score:86,program:'Rusia'});
+      DB.unshift(v);document.getElementById('run').disabled=true;runPipeline(v);document.getElementById('alertCount').textContent=alerts().length;
+    };
+  }
+}
+function simulate(){
+  SOURCES.forEach(s=>{srcState[s.id].last='0 min';});
+  ['ofac','uksl'].forEach(id=>{srcState[id].hash=Math.random().toString(16).slice(2,10);srcState[id].status='Cambios procesados'});
+  const pv=DB.find(v=>v.name==='PACIFIC VENTURE');
+  if(pv&&!pv.hits.length){pv.hits.push({src:'uksl',type:'Nombre difuso',target:'Kordan Freight Services',matched:'KORDAN FREIGHT SERVICES LTD',score:93,program:'Rusia'});
+    pv.events.push({date:today(),text:'Actualización UKSL: nueva coincidencia con el fletador Kordan Freight Services'});}
+  DB.forEach(v=>v.events.push({date:today(),text:'Re-screening automático tras actualización de OFAC y UKSL'}));
+  render();toast('Listas actualizadas: OFAC y UKSL con cambios. Cartera revisada; 1 alerta nueva.');
+}
+render();
+</script>
+</body>
+</html>
